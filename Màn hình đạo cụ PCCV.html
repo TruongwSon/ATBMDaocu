@@ -1,0 +1,384 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Màn hình đạo cụ PCCV</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: bảng điều khiển phim trường — danh sách shot bên trái, sân khấu 16:9 bên phải, chế độ quay phủ kín màn hình */
+:root{--bg:#f1f4f6;--panel:#ffffff;--line:#d5dce2;--fg:#151b21;--mute:#5a6673;--accent:#0b7a6c;--accent-fg:#ffffff;--rec:#c8322b;--chip:#e4eaee;--sel:#dff1ee;
+--ui:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--panel:#161c23;--line:#26303a;--fg:#e6ebf0;--mute:#8b97a4;--accent:#35c2ae;--accent-fg:#06211d;--rec:#ff5b52;--chip:#202933;--sel:#17332f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1318;--panel:#161c23;--line:#26303a;--fg:#e6ebf0;--mute:#8b97a4;--accent:#35c2ae;--accent-fg:#06211d;--rec:#ff5b52;--chip:#202933;--sel:#17332f;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px;line-height:1.5;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;gap:12px;padding-inline:16px;padding-block:12px}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand b{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.brand span{font-size:12px;color:var(--mute)}
+.tabs{display:flex;gap:4px;background:var(--chip);padding:3px;border-radius:8px}
+.tabs button{border:0;background:transparent;padding:5px 12px;border-radius:6px;font-weight:500;color:var(--mute)}
+.tabs button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.top-r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);padding:6px 12px;border-radius:7px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.rec{background:var(--rec);border-color:var(--rec);color:#fff;font-weight:600}
+.body{flex:1;min-height:0;display:flex;gap:12px}
+nav{width:300px;flex:none;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px}
+.grp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);padding:10px 8px 4px;font-weight:600}
+.it{display:flex;gap:8px;width:100%;text-align:left;border:0;background:transparent;padding:6px 8px;border-radius:6px;align-items:baseline}
+.it:hover{background:var(--chip)}
+.it.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--accent)}
+.it .sh{font-family:var(--mono);font-size:11px;color:var(--mute);flex:none;width:44px}
+.it .tt{min-width:0}
+.it .tt small{display:block;color:var(--mute);font-size:11.5px}
+#main{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .who{min-width:0;margin-right:auto}
+.bar .who b{display:block;font-weight:600}
+.bar .who span{font-size:12px;color:var(--mute)}
+.act{border:1px solid var(--accent);color:var(--accent);background:transparent;padding:5px 11px;border-radius:7px;font-weight:600;display:flex;gap:7px;align-items:center}
+.act i{font-style:normal;font-family:var(--mono);font-size:11px;background:var(--accent);color:var(--accent-fg);border-radius:4px;padding:0 5px}
+.act:hover{background:var(--sel)}
+.stage{position:relative;flex:1;min-height:0;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+#fit{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0}
+#cv{position:absolute;inset:0;overflow:hidden;background:#000}
+.hint{font-size:12px;color:var(--mute)}
+.hint kbd{font-family:var(--mono);font-size:11px;background:var(--chip);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+#diy{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-content:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 2px;font-size:15px}
+.card .ref{font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px}
+.card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.card pre{margin:10px 0 0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font:12px/1.5 var(--mono);white-space:pre-wrap;word-break:break-all}
+.card .cp{margin-top:8px}
+.card .warn{margin-top:10px;font-size:12.5px;color:var(--rec)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;z-index:30;pointer-events:none;transition:opacity .5s}
+.shoot .app{padding:0}.shoot .top,.shoot nav,.shoot .bar,.shoot #diy{display:none!important}
+.shoot .body{display:block}.shoot #main{position:fixed;inset:0;z-index:20;background:#000}
+.shoot .stage{position:absolute;inset:0;border:0;border-radius:0}
+@media (max-width:820px){body{overflow:auto}.app{height:auto;min-height:100%}.body{flex-direction:column}nav{width:auto;max-height:240px}.stage{flex:none;aspect-ratio:16/9;width:100%}}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+/* ===== Mô phỏng màn hình (không theo theme, vì là đạo cụ trên màn hình giả) ===== */
+#cv,#cv *{box-sizing:border-box}
+#cv button{cursor:pointer}
+.scr{position:absolute;inset:0;font-family:'Segoe UI',Arial,sans-serif;color:#202124;font-size:15px}
+.br{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;color:#202124;font:15px 'Segoe UI',Arial,sans-serif}
+.br-tabs{height:38px;background:#dee1e6;display:flex;align-items:flex-end;padding:0 10px;flex:none}
+.br-tab{background:#fff;padding:7px 18px;border-radius:9px 9px 0 0;font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.br-bar{height:42px;background:#fff;border-bottom:1px solid #dadce0;display:flex;align-items:center;gap:10px;padding:0 12px;flex:none;color:#5f6368}
+.br-url{flex:1;background:#f1f3f4;border-radius:18px;padding:6px 16px;font-size:14px;color:#202124}
+.br-page{flex:1;position:relative;overflow:hidden}
+.red{color:#d93025}
+.pop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0006;z-index:5}
+.mono{font-family:'JetBrains Mono',Consolas,monospace}
+/* ci */
+.ci{display:flex;height:100%;background:#f6f8fa}.ci aside{width:200px;background:#24292f;color:#d0d7de;padding:18px;display:flex;flex-direction:column;gap:12px}.ci aside b{color:#fff;font-size:18px;margin-bottom:8px}
+.ci main{flex:1;padding:28px 40px}.ci h1{margin:2px 0 4px;font-size:26px}.ci small{color:#57606a}.ci code{background:#eaeef2;padding:1px 7px;border-radius:5px}
+.ci-st{display:flex;gap:14px;margin:26px 0}.ci-st div{flex:1;background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:14px 16px;font-weight:600;border-left:6px solid #1a7f37;display:flex;flex-direction:column}
+.ci-st span{font-weight:400;font-size:13px;color:#57606a}.ci-st .wait{border-left-color:#bf8700}.ci-st .run{border-left-color:#0969da}.ci-st .done{border-left-color:#1a7f37}
+.ci-act{display:flex;align-items:center;gap:18px;margin-bottom:22px}.ci-act button{background:#d1242f;color:#fff;border:0;font-size:22px;font-weight:700;padding:18px 38px;border-radius:10px;box-shadow:0 4px 0 #8c1822}
+.ci-act button:disabled{opacity:.6}.ci-log{background:#0d1117;color:#7ee787;font:14px/1.6 'JetBrains Mono',monospace;padding:16px;border-radius:8px;height:230px;overflow:hidden;margin:0}
+/* explorer */
+.ex{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;font-size:14px}.ex .tt{height:32px;background:#fff;border-bottom:1px solid #e5e5e5;padding:6px 12px}
+.ex .rb{height:40px;background:#f3f3f3;border-bottom:1px solid #ddd;display:flex;gap:22px;align-items:center;padding:0 16px;color:#444}
+.ex .ab{display:flex;gap:10px;padding:8px 12px}.ex .ab div{border:1px solid #ccc;padding:4px 10px;flex:1}.ex .ab .s{flex:none;width:300px;color:#777}
+.ex .mn{flex:1;display:flex}.ex .tr{width:230px;border-right:1px solid #eee;padding:10px 14px;color:#333;line-height:2}.ex .ct{flex:1;display:flex;justify-content:center;padding-top:150px;color:#666;font-size:17px}
+.ex .sb{height:26px;border-top:1px solid #eee;padding:3px 12px;color:#555;font-size:13px}
+/* test env */
+.tv{height:100%;background:#f4f6f8}.tv .ban{background:#c62828;color:#fff;text-align:center;font-weight:700;letter-spacing:.08em;padding:9px;font-size:17px}
+.tv .hd{background:#1d3557;color:#fff;padding:14px 32px;display:flex;justify-content:space-between}.tv .cn{padding:26px 40px}
+.tv .empty{background:#fff8e1;border:1px solid #f0c36d;padding:14px 18px;border-radius:8px;font-weight:600;color:#7a5200}
+.tv textarea{width:100%;height:210px;margin-top:18px;border:1px solid #bbb;border-radius:6px;font:13px/1.5 'JetBrains Mono',monospace;padding:10px;resize:none}
+.tv .imp{margin-top:14px;display:flex;gap:16px;align-items:center}.tv .imp button{background:#1d3557;color:#fff;border:0;padding:11px 22px;border-radius:7px;font-weight:600;font-size:15px}
+.pbar{height:24px;background:#dde3ea;border-radius:12px;overflow:hidden;margin-top:14px}.pbar div{height:100%;width:0;background:#2e7d32;transition:width .2s}
+/* drift desktop */
+.dk{position:absolute;inset:0;background:radial-gradient(circle at 70% 30%,#3a7bd5,#0b2a5b 70%);overflow:hidden}.dk .tb{position:absolute;left:0;right:0;bottom:0;height:46px;background:#1b1f2acc;display:flex;align-items:center;padding:0 12px;gap:10px;color:#fff;font-size:13px}
+.dk .tb .ic{width:26px;height:26px;border-radius:5px;background:#ffffff33}.dk.w11 .tb{justify-content:center}.dk .tb .cl{position:absolute;right:16px;text-align:right;line-height:1.2}
+.dk .ico{position:absolute;color:#fff;font-size:12px;text-align:center;width:70px}.dk .ico i{display:block;width:40px;height:40px;margin:0 auto 4px;background:#ffffff40;border-radius:6px}
+.dw{width:640px;background:#fffbe6;border:3px solid #f2b705;border-radius:8px;box-shadow:0 20px 60px #000a;overflow:hidden}.dw h2{margin:0;background:#f2b705;color:#3b2d00;padding:12px 20px;font-size:20px}
+.dw p{padding:20px 24px 8px;margin:0;font-size:17px;line-height:1.5}.dw .bt{display:flex;gap:14px;padding:12px 24px 22px}.dw .bt button{flex:1;padding:13px;font-size:15px;border-radius:6px;border:1px solid #8a6d00;background:#fff;font-weight:600}.dw .bt .p{background:#1a73e8;color:#fff;border-color:#1a73e8}
+.dw .bt small{display:block;font-weight:400;opacity:.7}
+/* mooc */
+.mo{height:100%;background:#f7f8fb;display:flex;flex-direction:column}.mo .nv{background:#fff;border-bottom:1px solid #e2e5ec;padding:12px 40px;display:flex;gap:28px;align-items:center}.mo .nv b{color:#2a4bd7;font-size:20px;margin-right:auto}
+.mo .hero{background:linear-gradient(90deg,#2a4bd7,#6d3fd1);color:#fff;padding:26px 40px}.mo .hero h1{margin:0 0 4px;font-size:30px}
+.mo .gr{display:grid;grid-template-columns:1fr 520px;gap:26px;padding:24px 40px}.mo .bx{background:#fff;border:1px solid #e2e5ec;border-radius:10px;padding:16px 20px}
+.mo h3{margin:0 0 10px}.mo table{width:100%;border-collapse:collapse}.mo td,.mo th{padding:7px 8px;border-bottom:1px solid #eef0f4;text-align:left;font-size:14px}.mo .cr{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #eef0f4}
+/* tickets */
+.tk{height:100%;background:#fff;display:flex;flex-direction:column}.tk .h{padding:14px 28px;background:#0747a6;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.tk .tl{padding:8px 28px;background:#f4f5f7;border-bottom:1px solid #dfe1e6;display:flex;gap:20px;align-items:center;font-weight:600}.tk .ls{flex:1;overflow:hidden}
+.tk .r{display:flex;gap:14px;padding:3.5px 28px;border-bottom:1px solid #f0f1f3;font-size:13.5px;align-items:center}.tk .r.s{background:#e9f2ff}.tk .r b{width:68px;color:#0747a6;font-weight:600}.tk .r span:nth-child(3){flex:1}
+.tk .r em{font-style:normal;background:#dfe1e6;border-radius:4px;padding:0 8px;font-size:12px}.tk .ft{padding:12px 28px;border-top:1px solid #dfe1e6;display:flex;gap:18px;align-items:center;background:#fafbfc}
+.tk .ft button{background:#d1242f;color:#fff;border:0;padding:12px 24px;font-weight:700;font-size:15px;border-radius:6px;letter-spacing:.02em}.tk .ft button:disabled{background:#c8ccd3}
+.tk .mdl{width:560px;background:#fff;border-radius:10px;padding:26px;box-shadow:0 20px 60px #000a}
+/* servers */
+.sv{height:100%;background:#1e2127;color:#e6e6e6;display:flex;flex-direction:column}.sv .h{background:#0f6cbd;color:#fff;padding:12px 24px;font-size:18px;font-weight:600}
+.sv .tb{padding:14px 24px;display:flex;gap:18px;align-items:center;border-bottom:1px solid #333}.sv .tb button{background:#d1242f;color:#fff;border:0;padding:12px 20px;font-weight:700;border-radius:6px;font-size:15px}.sv .tb .sa{background:#33383f;color:#fff;font-weight:500}
+.sv .gd{flex:1;padding:22px 24px;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);gap:16px}
+.sv .c{background:#2b3038;border:2px solid #3b424b;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:5px}.sv .c b{display:flex;gap:10px;align-items:center;font-size:17px}.sv .c small{color:#9aa4af}
+.sv .d{width:16px;height:16px;border-radius:50%;background:#2ecc71;box-shadow:0 0 10px #2ecc71}.sv .st{margin-top:auto;font-weight:600;color:#2ecc71;font-size:13px}.sv .c.sel{border-color:#4aa3ff}
+.sv .c.off{background:#6b0b14;border-color:#ff2d3d;animation:pl .6s infinite alternate}.sv .c.off .d{background:#ff2d3d;box-shadow:0 0 14px #ff2d3d}.sv .c.off .st{color:#ffb3b9}
+.sv .bn{padding:10px 24px;background:#3b3000;color:#ffd24a;font-weight:600}.sv .bn.r{background:#7a0010;color:#fff;animation:pl .6s infinite alternate}
+@keyframes pl{from{filter:brightness(.8)}to{filter:brightness(1.4)}}
+/* remote */
+.rm{height:100%;background:#eef1f5;padding:34px 60px}.rm .pn{background:#fff;border:1px solid #d5dbe3;border-radius:10px;padding:26px 32px;max-width:880px}.rm h2{margin:0 0 18px}
+.rm .fl{display:grid;grid-template-columns:240px 1fr;gap:14px 18px;align-items:center}.rm select,.rm input{padding:10px;font-size:15px;border:1px solid #b9c1cc;border-radius:6px;background:#fff}
+.rm .sm{margin-top:22px;padding:14px 18px;background:#e8f5e9;border-radius:8px;font:600 15px 'JetBrains Mono',monospace}.rm .sm.bad{background:#fdecea;color:#c62828}.rm .sv2{margin-top:18px;background:#1a73e8;color:#fff;border:0;padding:12px 28px;border-radius:7px;font-size:16px;font-weight:600}
+/* reg */
+.rg{height:100%;background:#fff;overflow:hidden}.rg .hd{background:linear-gradient(110deg,#10375c,#1f6f8b);color:#fff;padding:30px 60px}.rg h1{margin:0 0 6px;font-size:30px;max-width:900px}
+.rg .gr{display:grid;grid-template-columns:1fr 420px;gap:34px;padding:26px 60px}.rg label{display:block;font-weight:600;margin:12px 0 4px;font-size:14px}.rg input{width:100%;padding:10px;border:1px solid #bbb;border-radius:6px}
+.rg table{width:100%;border-collapse:collapse}.rg td{padding:9px 0;border-bottom:1px solid #eee}.rg .py{border:1px solid #cfd8e3;border-radius:10px;padding:18px;background:#f7fafc}
+.rg .pp{display:inline-flex;align-items:center;gap:10px;border:1px solid #003087;border-radius:24px;padding:10px 24px;font-weight:800;font-size:20px;color:#003087;font-style:italic;background:#ffc439}
+/* terminal */
+.tm{position:absolute;inset:0;background:#0c0f14;color:#d6e2f0;font:16px/1.6 'JetBrains Mono',Consolas,monospace;padding:0}.tm .ti{background:#1b2230;padding:8px 18px;font-size:13px;color:#8fa3bd}.tm pre{margin:0;padding:18px 24px;white-space:pre-wrap;font:inherit}
+.tm .cur{display:inline-block;width:10px;height:19px;background:#d6e2f0;vertical-align:-3px;animation:bk 1s steps(1) infinite}@keyframes bk{50%{opacity:0}}
+.tm .g{color:#7ee787}.tm .y{color:#ffd24a}.tm .rd{color:#ff6b6b}.tm .b{color:#6cb6ff}
+.wr{width:760px;background:#2b0a0a;border:3px solid #ff3b3b;border-radius:8px;box-shadow:0 0 50px #f003;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#fff}.wr h2{margin:0;background:#c0151b;padding:12px 22px;font-size:19px}
+.wr p{margin:0;padding:22px 26px;font:600 18px/1.5 'JetBrains Mono',monospace}.wr .bt{display:flex;gap:14px;padding:0 26px 24px}.wr button{flex:1;padding:13px;font-size:16px;font-weight:600;border-radius:6px;border:1px solid #888;background:#eee}.wr .p{background:#ff3b3b;color:#fff;border-color:#ff3b3b}
+/* contract */
+.ct{height:100%;background:#525659;display:flex}.ct .vw{flex:1;overflow-y:auto;padding:30px 0;scroll-behavior:auto}.ct .pg{width:760px;margin:0 auto;background:#fff;padding:60px 70px;font:15.5px/1.7 'Times New Roman',serif;color:#111;transform-origin:50% 0;transition:transform .3s}
+.ct .pg h2{text-align:center;margin:0 0 4px}.ct .pg h4{margin:20px 0 4px}.ct .pg .k{background:#fff3a0}.ct .sd{width:300px;background:#323639;color:#eee;padding:24px;display:flex;flex-direction:column;gap:16px}
+.ct .sd button{background:#1a73e8;color:#fff;border:0;padding:15px 12px;font-weight:700;font-size:14px;border-radius:6px;letter-spacing:.02em}.ct .stp{border:4px solid #1b8a3a;color:#1b8a3a;border-radius:10px;padding:10px 16px;font:800 20px Arial;transform:rotate(-6deg);text-align:center}
+/* xp */
+.xp{position:absolute;inset:0;background:#d4d0c8;font:14px Tahoma,Arial,sans-serif;display:flex;flex-direction:column;color:#000}.xp .ti{background:linear-gradient(#0a5fd8,#0c3ea5);color:#fff;font-weight:700;padding:7px 12px;font-size:15px}
+.xp .mn{display:flex;gap:18px;padding:5px 12px;border-bottom:1px solid #999}.xp .tl{display:flex;gap:6px;padding:6px 12px;border-bottom:1px solid #999}.xp .tl i{width:34px;height:26px;background:#bdb9ae;border:1px outset #fff}
+.xp .gd{flex:1;margin:10px;background:#fff;border:2px inset #888;overflow:hidden}.xp table{border-collapse:collapse;width:100%}.xp th{background:#d4d0c8;border:1px solid #888;padding:4px 10px;text-align:left}.xp td{border:1px solid #ccc;padding:3px 10px;font-family:'Courier New',monospace}
+.xp .sb{border-top:1px solid #888;padding:4px 12px;font-size:13px}.xp .ov{position:absolute;inset:0;background:#0005;display:flex;align-items:center;justify-content:center}
+.xp .al{width:640px;background:#ece9d8;border:4px solid #ffc400;outline:3px solid #d00;box-shadow:6px 6px 0 #0007}.xp .al .ti{background:#c00}.xp .al .tx{padding:20px 24px;font-size:15px;line-height:1.5}.xp .al .tx b{color:#c00}
+.xp .al .bt{display:flex;gap:10px;justify-content:center;padding:6px 0 18px}.xp .al button{padding:6px 22px;font:14px Tahoma;border:2px outset #fff;background:#d4d0c8}
+/* dbloss */
+.db{height:100%;background:#f3f6fa;display:flex;flex-direction:column}.db .h{background:#005a9c;color:#fff;padding:14px 32px;font-size:20px;font-weight:600}.db .bd{padding:24px 40px;flex:1}
+.db table{width:100%;border-collapse:collapse;background:#fff}.db th,.db td{padding:8px 12px;border-bottom:1px solid #e3e8ee;text-align:left}.db .pb{margin:14px 0 20px}
+.lost{position:absolute;inset:0;background:#8b000ee6;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;z-index:4;animation:pl .5s infinite alternate}
+.lost h1{font:800 64px 'JetBrains Mono',monospace;margin:0 0 14px}.lost p{font-size:20px;margin:4px}
+/* firewall */
+.fw{height:100%;background:#eef0f3;display:flex;flex-direction:column}.fw .h{background:#212f45;color:#fff;padding:12px 28px;font-size:18px;font-weight:600;display:flex;justify-content:space-between}
+.fw .gd{padding:22px 28px;display:grid;grid-template-columns:1fr 340px;gap:20px;flex:1}.fw .bx{background:#fff;border:1px solid #d0d5dd;border-radius:8px;padding:14px 18px}
+.fw table{width:100%;border-collapse:collapse;font-size:14px}.fw th{background:#f2f4f7;text-align:left;padding:8px}.fw td{padding:9px 8px;border-bottom:1px solid #eee;font-family:'JetBrains Mono',monospace;font-size:13px}.fw tr.hot td{background:#fff3f3;font-weight:700}
+.fw .o{color:#c62828;font-weight:800}.fw .sp{font:800 34px 'JetBrains Mono',monospace;margin:6px 0}.fw .wn{margin-top:14px;background:#c62828;color:#fff;padding:12px 18px;border-radius:8px;font-weight:700;animation:pl .7s infinite alternate}
+.fw button{background:#0f6cbd;color:#fff;border:0;padding:6px 14px;border-radius:5px}.fw input{padding:5px;font:13px 'JetBrains Mono',monospace;width:150px}
+/* ssms */
+.ss{height:100%;background:#f0f0f0;display:flex;flex-direction:column;font:14px Segoe UI,Arial}.ss .tb{background:#3c3c3c;color:#fff;padding:7px 14px;display:flex;gap:20px;align-items:center}.ss .tb button{background:#0e7a0d;color:#fff;border:0;padding:5px 14px;border-radius:3px;font-weight:600}
+.ss .mn{flex:1;display:flex;min-height:0}.ss .pl{width:230px;background:#fff;border-right:1px solid #ccc;padding:14px;line-height:2.1}.ss .pl .a{background:#cce4f7;font-weight:600}.ss .rt{flex:1;padding:16px 22px;overflow:hidden}
+.ss table{border-collapse:collapse;background:#fff;width:100%;margin:8px 0 14px}.ss th,.ss td{border:1px solid #ccc;padding:7px 12px;text-align:center}.ss td:first-child,.ss th:first-child{text-align:left}
+.ss input{width:18px;height:18px}.ss .sq{background:#1e1e1e;color:#9cdcfe;font:14px/1.6 'JetBrains Mono',monospace;padding:12px 16px;border-radius:4px;min-height:84px}.ss .ok{color:#6a9955;margin-top:6px}
+/* testrun, desk */
+.tr{height:100%;background:#10151c;color:#d6e2f0;padding:28px 44px;font:15px/1.7 'JetBrains Mono',monospace}.tr h2{margin:0 0 10px;font-size:22px}
+.tr .big{margin-top:22px;padding:22px 26px;border-radius:8px;font-size:22px;font-weight:800}.tr .big.f{background:#5a0f18;color:#ffb3b9;border:2px solid #ff4d5e}.tr .big.p{background:#0f4a22;color:#b7f5c9;border:2px solid #2ecc71;font-size:44px;text-align:center}
+.dsk{height:100%;background:#f5f6f8;display:flex;flex-direction:column}.dsk .h{background:#00695c;color:#fff;padding:14px 32px;font-size:19px;font-weight:600}.dsk .bd{padding:26px 40px;display:grid;grid-template-columns:1fr 360px;gap:26px}
+.dsk .bx{background:#fff;border:1px solid #dde1e6;border-radius:10px;padding:18px 22px}.dsk .pill{display:inline-block;padding:2px 12px;border-radius:12px;font-weight:700;font-size:13px;background:#fff3cd;color:#7a5200}.dsk .pill.c{background:#d6d8db;color:#333}
+.dsk .cl{margin-top:20px;background:#d1242f;color:#fff;border:0;padding:15px 22px;font-size:16px;font-weight:700;border-radius:7px;width:100%}
+/* alerts, beacon, end */
+.al5{position:absolute;inset:0;background:#7a0010;animation:fl .55s infinite alternate;color:#fff;overflow:hidden}@keyframes fl{from{background:#5a000c}to{background:#d40018}}
+.al5 .lg{position:absolute;inset:0;padding:14px 20px;font:13px/1.5 'JetBrains Mono',monospace;color:#ffffff66;overflow:hidden;white-space:pre}.al5 .ms{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px}
+.al5 small{font:700 20px 'JetBrains Mono',monospace;letter-spacing:.2em;margin-bottom:22px;background:#000a;padding:6px 18px}.al5 h1{margin:0;font:800 50px/1.25 'JetBrains Mono',monospace;text-shadow:0 0 24px #000}
+.bc{position:absolute;inset:0;background:#05060a;overflow:hidden}.bc .sp{position:absolute;left:50%;top:50%;width:1800px;height:1800px;margin:-900px 0 0 -900px;background:conic-gradient(from 0deg,#ff1c1ccc 0deg,#ff1c1c00 70deg,#ff1c1c00 180deg,#ff1c1ccc 180deg,#ff1c1c00 250deg,#ff1c1c00 360deg);animation:sp 1.1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}.bc .gl{position:absolute;inset:0;background:radial-gradient(circle,#ff0000aa,#0000 55%);animation:pl .55s infinite alternate}
+.en{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;padding:90px;text-align:center}.en h1{color:#fff;font:700 46px/1.45 'Be Vietnam Pro','Segoe UI',Arial,sans-serif;margin:0}
+</style>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><b>Màn hình đạo cụ PCCV</b><span>Một đêm trực chạy deadline · 12 cảnh, 26 shot</span></div>
+    <div class="tabs" role="tablist"><button class="on" data-tab="screens" role="tab">Màn hình đã code</button><button data-tab="diy" role="tab">Tự làm, không cần code</button></div>
+    <div class="top-r"><button class="btn" id="bFull">Toàn màn hình</button><button class="btn rec" id="bShoot">Chế độ quay (H)</button></div>
+  </header>
+  <div class="body">
+    <nav id="nav" aria-label="Danh sách màn hình"></nav>
+    <section id="main">
+      <div class="bar" id="bar"></div>
+      <div class="stage" id="stage"><div id="fit"><div id="cv"></div></div></div>
+      <div class="hint" id="hint"><kbd>←</kbd> <kbd>→</kbd> đổi màn hình · <kbd>1</kbd>–<kbd>9</kbd> kích hoạt hành động · <kbd>R</kbd> đặt lại · <kbd>H</kbd> chế độ quay · <kbd>F</kbd> toàn màn hình</div>
+    </section>
+    <section id="diy" hidden></section>
+  </div>
+</div>
+<script>
+(function(){
+const ROWS=[["Lý Quốc Hiếu", "065980270982", "6363032239765", "3900488180"], ["Dương Văn Quân", "086855663043", "9669820112880", "0635918516"], ["Nguyễn Đức Quân", "084105131245", "9658796002908", "1970929006"], ["Nguyễn Thu Phúc", "030142119006", "8047586011373", "4329866951"], ["Đỗ Thị Hà", "015026351345", "6737308110331", "2820982280"], ["Nguyễn Đức Sơn", "078163523080", "4463879754449", "7046009429"], ["Hoàng Quốc Huy", "082486909537", "4108100991261", "5176736494"], ["Trần Ngọc Cường", "057734214839", "5270997177437", "7732141939"], ["Lý Quốc Bình", "023439712596", "7683431928647", "1788042957"], ["Đỗ Hồng Tuấn", "055905600525", "5392809856812", "0389772298"], ["Trần Đức Nam", "042046947969", "3074232259058", "7912555674"], ["Hoàng Đức Long", "063744846477", "5490569423937", "3119523750"]];
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+/* ---------- âm thanh (chỉ chạy sau khi bấm) ---------- */
+let ac=null,siren=null;
+function A(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();}catch(e){}return ac}
+const snd={
+ key(){const c=A();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=900+Math.random()*500;g.gain.setValueAtTime(.05,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.05);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.06)},
+ beep(f=880,d=.15){const c=A();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.07,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d)},
+ siren(on){
+  if(siren){try{siren.o.stop();siren.l.stop()}catch(e){}siren=null}
+  if(!on)return;const c=A();if(!c)return;
+  const o=c.createOscillator(),l=c.createOscillator(),lg=c.createGain(),g=c.createGain();
+  o.type='sawtooth';o.frequency.value=850;l.frequency.value=.9;lg.gain.value=330;g.gain.value=.07;
+  l.connect(lg).connect(o.frequency);o.connect(g).connect(c.destination);o.start();l.start();siren={o,l};
+ }
+};
+/* ---------- vòng đời màn hình ---------- */
+let cleanups=[],cur=null;
+const H={
+ t(fn,ms){const id=setTimeout(fn,ms);cleanups.push(()=>clearTimeout(id));return id},
+ iv(fn,ms){const id=setInterval(fn,ms);cleanups.push(()=>clearInterval(id));return id},
+ on(fn){cleanups.push(fn)},
+ type(el,text,speed,done,sound){let i=0;const id=setInterval(()=>{el.textContent=text.slice(0,++i);if(sound&&text[i-1]!==' ')snd.key();if(i>=text.length){clearInterval(id);done&&done()}},speed);cleanups.push(()=>clearInterval(id))},
+ snd
+};
+const chrome=(url,body,title)=>`<div class="br"><div class="br-tabs"><span class="br-tab">${title||url}</span></div><div class="br-bar"><span>←</span><span>→</span><span>⟳</span><div class="br-url">https://${url}</div></div><div class="br-page">${body}</div></div>`;
+const S=[];
+/* ======== CẢNH 1 ======== */
+S.push({id:'cicd',cs:'Cảnh 1 · Phòng IT 22h00',shot:'Shot 2',who:'Máy Tài',title:'CI/CD · nút Deploy to Production',
+html:chrome('ci.truong-demo.edu.vn/nckh-module/pipelines/482',`<div class="ci"><aside><b>BuildFlow</b><span>Pipelines</span><span>Runners</span><span>Artifacts</span><span>Cài đặt</span></aside><main><small>nckh-module / pipelines</small><h1>Pipeline #482 · patch-quan-ly-nckh</h1><p>Branch: <code>main</code> · Commit 9f3c2e1 · do Tài đẩy lên vài phút trước</p>
+<div class="ci-st"><div class="done">Build<span>1m 12s</span></div><div class="done">Unit test<span>2m 40s</span></div><div class="done">Package<span>0m 35s</span></div><div class="wait" id="sd">Deploy<span id="ss">Chờ xác nhận</span></div></div>
+<div class="ci-act"><button id="dep">Deploy to Production</button><span>Branch: main · Môi trường: <b class="red">PRODUCTION</b></span></div><pre class="ci-log" id="lg">[22:04:11] build ok · artifact nckh-module-482.zip (48 MB)
+[22:07:03] tests passed 312/312
+[22:07:38] package signed, san sang deploy
+</pre></main></div>`,'BuildFlow CI'),
+init(r,h){const b=$('#dep',r);b.onclick=()=>{b.disabled=true;$('#sd',r).className='run';$('#ss',r).textContent='Đang chạy…';const lg=$('#lg',r);const L=['[22:08:02] connecting prod-web-01 …','[22:08:03] uploading nckh-module-482.zip …','[22:08:09] restarting service NCKH_Core_Service …','[22:08:12] healthcheck pending …'];L.forEach((x,i)=>h.t(()=>lg.textContent+=x+'\n',500*(i+1)));h.t(()=>{$('#sd',r).className='done';$('#ss',r).textContent='Đã lên Production';lg.textContent+='[22:08:15] DEPLOYED to PRODUCTION\n'},3200)}},
+actions:[{l:'Bấm Deploy to Production',f:r=>$('#dep',r).click()}]});
+/* ======== CẢNH 2 ======== */
+S.push({id:'err500',cs:'Cảnh 2 · Phòng IT 22h30',shot:'Shot 1',who:'Máy Tài',title:'HTTP ERROR 500 trên cổng NCKH',
+html:chrome('nckh.truong-demo.edu.vn/portal',`<div id="pg" style="position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 120px"><div style="font:800 62px 'Segoe UI',Arial" class="red">HTTP ERROR 500</div><div style="font:600 30px Arial;margin-top:10px" class="red">Internal Server Error</div><div class="mono red" style="font-size:20px;margin-top:26px">NCKH_Core_Service Crash — dependency conflict: unverified-pdf-parser vs core-legacy</div><div style="margin-top:34px;color:#666;font-size:17px">Trang này hiện không thể xử lý yêu cầu. Nhấn F5 để tải lại.</div></div>`,'nckh.truong-demo.edu.vn'),
+init(r,h){},actions:[{l:'F5 tải lại (nhấp nháy)',f:(r,h)=>{const p=$('#pg',r);p.style.opacity=0;setTimeout(()=>p.style.opacity=1,260);h.snd.beep(300,.2)}}]});
+S.push({id:'explorer',cs:'Cảnh 2 · Phòng IT 22h30',shot:'Shot 2',who:'Máy Sơn',title:'Thư mục backup rỗng (This folder is empty)',
+html:`<div class="scr ex"><div class="tt">NCKH — File Explorer</div><div class="rb"><span>New</span><span>Cut</span><span>Copy</span><span>Paste</span><span>Sort</span><span>View</span></div><div class="ab"><div>This PC › Data (D:) › System_Backup › NCKH</div><div class="s" id="se">Search NCKH</div></div><div class="mn"><div class="tr">Quick access<br>Desktop<br>Downloads<br><b>Data (D:)</b><br>&nbsp;&nbsp;System_Backup<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>NCKH</b></div><div class="ct">This folder is empty.</div></div><div class="sb" id="sb">0 items</div></div>`,
+init(){},actions:[{l:'Tìm kiếm: hiện "0 items found"',f:r=>{$('#se',r).textContent='Search NCKH: backup';$('#sb',r).textContent='0 items found'}}]});
+/* ======== CẢNH 3 ======== */
+S.push({id:'testenv',cs:'Cảnh 3 · Phòng IT 23h00',shot:'Shot 1–2',who:'Máy Tài',title:'Môi trường Test: trống, rồi import dữ liệu thật',
+html:chrome('nckh-test.truong-demo.edu.vn/admin',`<div class="tv"><div class="ban">MÔI TRƯỜNG TEST - KIỂM THỬ</div><div class="hd"><b>Quản lý NCKH · Quản trị</b><span>tai.dev</span></div><div class="cn"><div class="empty" id="em">Database is empty. Please feed test data.</div><textarea id="ta" placeholder="Dán dữ liệu vào đây (Ctrl + V)"></textarea><div class="imp"><button id="im">Import vào Test</button><span id="st"></span></div><div class="pbar"><div id="pb"></div></div></div></div>`,'NCKH TEST'),
+init(r,h){$('#im',r).onclick=()=>{const pb=$('#pb',r),st=$('#st',r);let n=0;const tot=1540;st.textContent='Importing 1,540 real records…';h.iv(function(){if(n>=100)return;n=Math.min(100,n+4);pb.style.width=n+'%';st.textContent=n<100?`Importing ${tot.toLocaleString('en')} real records… ${n}%`:`Importing ${tot.toLocaleString('en')} real records… Completed 100%`},110)}},
+actions:[{l:'Dán dữ liệu (Ctrl+V giả lập)',f:(r)=>{$('#ta',r).value='Họ tên GV\tSố CCCD/Định danh\tSố tài khoản ngân hàng\tMã số thuế\n'+ROWS.slice(0,8).map(x=>x.join('\t')).join('\n')+'\n… (1.540 dòng)';$('#em',r).style.opacity=.4}},{l:'Bấm Import',f:r=>$('#im',r).click()}]});
+/* ======== CẢNH 4 ======== */
+S.push({id:'drift',cs:'Cảnh 4 · Phòng IT 23h30',shot:'Shot 1',who:'Máy trạm số 3',title:'Popup Configuration Drift (có kiểu Win10/Win11)',
+html:`<div class="dk" id="dk"><div class="ico" style="left:24px;top:20px"><i></i>This PC</div><div class="ico" style="left:24px;top:110px"><i></i>Recycle Bin</div><div class="ico" style="left:24px;top:200px"><i></i>NCKH</div>
+<div class="pop" id="pp" style="display:none"><div class="dw"><h2>CẢNH BÁO BẢO MẬT</h2><p>Cấu hình hệ điều hành đã bị sai lệch (Configuration Drift) so với tiêu chuẩn Baseline ban đầu của Trường.</p><div class="bt"><button class="p" id="u">Cập nhật theo chuẩn ngay</button><button id="n">Nhắc tôi sau 3 ngày<small>Remind me in 3 days</small></button></div></div></div>
+<div class="tb"><div class="ic"></div><div class="ic"></div><div class="ic"></div><div class="ic"></div><div class="cl">23:35<br>09/10/2026</div></div></div>`,
+init(r,h){h.t(()=>$('#pp',r).style.display='flex',900);$('#n',r).onclick=()=>$('#pp',r).style.display='none';$('#u',r).onclick=()=>$('#pp',r).style.display='none'},
+actions:[{l:'Đổi kiểu desktop Win10 ⇄ Win11',f:r=>$('#dk',r).classList.toggle('w11')},{l:'Hiện popup lại',f:r=>$('#pp',r).style.display='flex'},{l:'Bấm Nhắc tôi sau 3 ngày',f:r=>$('#n',r).click()}]});
+S.push({id:'mooc',cs:'Cảnh 4 · Phòng IT 23h30',shot:'Shot 2',who:'Laptop Tâm',title:'Trang MOOC với tài khoản test rác',
+html:chrome('mooc.truong-demo.edu.vn',`<div class="mo"><div class="nv"><b>MOOC Trường · Học liệu mở</b><span>Khóa học</span><span>Giảng viên</span><span>Hỗ trợ</span></div><div class="hero"><h1>Học mọi lúc, mọi nơi</h1><div>42 khóa học · 18.230 học viên đang hoạt động</div></div>
+<div class="gr"><div class="bx"><h3>Khóa học nổi bật</h3><div class="cr"><b>Phương pháp nghiên cứu khoa học</b><span style="margin-left:auto">4,8 ★</span></div><div class="cr"><b>Viết bài báo quốc tế</b><span style="margin-left:auto">4,7 ★</span></div><div class="cr"><b>Phân tích dữ liệu cơ bản</b><span style="margin-left:auto">4,6 ★</span></div><div class="cr"><b>Đạo đức học thuật</b><span style="margin-left:auto">4,6 ★</span></div><div class="cr"><b>Kỹ năng thuyết trình khoa học</b><span style="margin-left:auto">4,5 ★</span></div></div>
+<div class="bx"><h3>Bảng xếp hạng học viên xuất sắc</h3><table><tr><th>#</th><th>Học viên</th><th>Điểm</th></tr><tr><td>1</td><td>Test_Rac_Acc01</td><td>9.999</td></tr><tr><td>2</td><td>User_Test_Xoa_Gap_99</td><td>9.874</td></tr><tr><td>3</td><td>AAA_Delete_Me_Plz</td><td>9.640</td></tr><tr><td>4</td><td>Test_Rac_Acc02</td><td>9.512</td></tr><tr><td>5</td><td>zzz_load_test_0417</td><td>9.388</td></tr><tr><td>6</td><td>asdfgh_qwerty</td><td>9.201</td></tr><tr><td>7</td><td>User_Test_Xoa_Gap_100</td><td>9.150</td></tr><tr><td>8</td><td>dummy_dummy_dummy</td><td>9.042</td></tr></table></div></div></div>`,'MOOC Trường'),
+init(){},actions:[]});
+/* ======== CẢNH 5 ======== */
+const TITLES=['Sửa font chữ trang NCKH','Nâng cấp công thức tính bảng lương','Vá bảo mật nhân AI','Đổi logo Thư viện'];
+const ACT=['Sửa lỗi hiển thị','Nâng cấp','Tối ưu truy vấn','Thêm cột xuất Excel','Cập nhật chữ ký email','Đổi màu nút','Vá lỗi phân trang','Thêm bộ lọc tìm kiếm'],MOD=['trang NCKH','bảng lương','module AI','Thư viện','cổng đăng ký hội thảo','báo cáo giờ giảng','module MOOC','trang chủ','hệ thống email','quản lý giáo trình','phân quyền người dùng','bảng điều khiển'],DEP=['Khoa CNTT','Phòng Kế toán','Thư viện','Phòng KHCN','Phòng Đào tạo','Văn phòng'];
+for(let i=4;i<50;i++)TITLES.push(ACT[i%8]+' '+MOD[(i*5+3)%12]);
+S.push({id:'tickets',cs:'Cảnh 5 · Phòng IT 00h00',shot:'Shot 1',who:'Máy Sơn',title:'Danh sách 50 Change Request + Batch Deploy',
+html:chrome('tracker.truong-demo.edu.vn/change-requests',`<div class="tk"><div class="h"><b>Change Requests · tồn đọng từ tuần trước</b><span>50 tickets</span></div><div class="tl"><label><input type="checkbox" id="sa"> Select All (50)</label><span id="sc" style="margin-left:auto;font-weight:400">Đã chọn 0</span></div><div class="ls" id="ls">${TITLES.map((t,i)=>`<div class="r"><input type="checkbox" class="cb"><b>CR-${101+i}</b><span>${t}</span><em>${DEP[i%6]}</em><span style="color:#6b778c;width:70px;text-align:right">${(i%7)+1} ngày</span></div>`).join('')}</div><div class="ft"><button id="bd" disabled>BATCH DEPLOY TO PRODUCTION TONIGHT</button><span id="ms" style="color:#6b778c">Chọn ticket để gộp thành một gói cập nhật</span></div><div class="pop" id="md" style="display:none"><div class="mdl"><h2 style="margin:0 0 8px">Đã gộp 50 yêu cầu thành 1 gói cập nhật</h2><p>release/batch-all-tonight · 50 thay đổi thuộc 12 phân hệ khác nhau.</p><b class="red">Đang đưa lên Production…</b></div></div></div>`,'Change Requests'),
+init(r,h){const cbs=$$('.cb',r),up=()=>{const n=cbs.filter(c=>c.checked).length;$('#sc',r).textContent='Đã chọn '+n;$('#bd',r).disabled=n===0;$('#bd',r).textContent=n?`BATCH DEPLOY TO PRODUCTION TONIGHT (${n})`:'BATCH DEPLOY TO PRODUCTION TONIGHT';cbs.forEach(c=>c.parentNode.classList.toggle('s',c.checked))};
+cbs.forEach(c=>c.onchange=up);$('#sa',r).onchange=e=>{cbs.forEach((c,i)=>h.t(()=>{c.checked=e.target.checked;up()},i*18))};$('#bd',r).onclick=()=>$('#md',r).style.display='flex'},
+actions:[{l:'Select All (50 tickets)',f:r=>{const s=$('#sa',r);s.checked=true;s.onchange({target:s})}},{l:'Bấm BATCH DEPLOY',f:r=>$('#bd',r).click()}]});
+S.push({id:'servers',cs:'Cảnh 5 · Phòng IT 00h00',shot:'Shot 2',who:'Máy Tài',title:'Server Manager: 10 node xanh sang đỏ',
+html:`<div class="scr sv"><div class="h">Server Manager · Cụm hạ tầng NCKH</div><div class="tb"><button class="sa" id="sa">Chọn tất cả (10)</button><button id="go">INSTALL SECURITY PATCH &amp; REBOOT ALL NOW</button><span id="ct" style="color:#9aa4af">10 / 10 online</span></div><div id="bn"></div><div class="gd" id="gd">${Array.from({length:10},(_,i)=>`<div class="c"><b><i class="d"></i>Server ${String(i+1).padStart(2,'0')}</b><small>10.10.1.${11+i} · Windows Server 2019</small><small>CPU ${18+i*3}% · RAM ${40+i*2}%</small><div class="st">ONLINE</div></div>`).join('')}</div></div>`,
+init(r,h){const cs=$$('.c',r);$('#sa',r).onclick=()=>cs.forEach(c=>c.classList.add('sel'));$('#go',r).onclick=()=>{if(!$$('.c.sel',r).length)cs.forEach(c=>c.classList.add('sel'));let n=5;const bn=$('#bn',r);bn.className='bn';bn.textContent=`Đang cài bản vá và khởi động lại 10/10 server… ${n}s`;const id=h.iv(()=>{n--;if(n>0){bn.textContent=`Đang cài bản vá và khởi động lại 10/10 server… ${n}s`;return}clearInterval(id);bn.className='bn r';bn.textContent='[CRITICAL] 10 / 10 server mất kết nối';cs.forEach(c=>{c.classList.add('off');$('.st',c).textContent='[CRITICAL OFFLINE - CONNECTION DROPPED]'});$('#ct',r).textContent='0 / 10 online';h.snd.siren(true);h.on(()=>h.snd.siren(false))},1000)}},
+actions:[{l:'Bôi đen toàn bộ 10 server',f:r=>$('#sa',r).click()},{l:'Bấm INSTALL & REBOOT ALL (5 giây → đỏ)',f:r=>$('#go',r).click()},{l:'Tắt còi',f:(r,h)=>h.snd.siren(false)}]});
+/* ======== CẢNH 6 ======== */
+S.push({id:'remote',cs:'Cảnh 6 · Phòng IT 00h30',shot:'Shot 1',who:'Máy Tâm',title:'Cấu hình Remote Access: Expire NEVER',
+html:chrome('vpn-admin.truong-demo.edu.vn/remote-access',`<div class="rm"><div class="pn"><h2>Remote Desktop · Cấp quyền đối tác</h2><div class="fl"><label>Đối tác</label><input value="WebDev Co. (web hội thảo WordPress)" readonly><label>Tài khoản</label><input value="webdev_partner" readonly><label>Permission</label><select id="pm"><option>Read only</option><option>Editor</option><option selected>Full Admin</option></select><label>Access Expiration Date</label><select id="ex"><option>2 giờ</option><option selected>24 giờ</option><option>7 ngày</option><option>NEVER (Vĩnh viễn)</option></select></div><div class="sm" id="sm">Permission: Full Admin - Expire: 24 giờ</div><button class="sv2" id="sv">Save</button> <span id="ok" style="margin-left:14px;font-weight:600"></span></div></div>`,'Remote Access'),
+init(r,h){const up=()=>{const n=$('#ex',r).value.startsWith('NEVER');const s=$('#sm',r);s.textContent=`Permission: ${$('#pm',r).value} - Expire: ${n?'NEVER':$('#ex',r).value}`;s.className='sm'+(n?' bad':'')};$('#ex',r).onchange=up;$('#pm',r).onchange=up;$('#sv',r).onclick=()=>$('#ok',r).textContent='Đã lưu cấu hình.'},
+actions:[{l:'Chọn NEVER',f:r=>{$('#ex',r).value='NEVER (Vĩnh viễn)';$('#ex',r).onchange()}},{l:'Bấm Save',f:r=>$('#sv',r).click()}]});
+S.push({id:'reg',cs:'Cảnh 6 · Phòng IT 00h30',shot:'Shot 2',who:'Trang đăng ký hội thảo',title:'Trang đăng ký có cổng thanh toán PayPal',
+html:chrome('hoithao.truong-demo.edu.vn/dang-ky',`<div class="rg"><div class="hd"><small>HỘI THẢO QUỐC TẾ · 2026</small><h1>Chuyển đổi số trong nghiên cứu khoa học và đào tạo đại học</h1></div><div class="gr"><div><label>Họ và tên</label><input value="Nguyễn Văn A (ví dụ)"><label>Đơn vị công tác</label><input value="Trường Đại học Demo"><label>Email</label><input value="vana@truong-demo.edu.vn"></div><div class="py"><b>Lệ phí tham dự</b><table><tr><td>Đại biểu trong nước</td><td align="right">1.500.000đ</td></tr><tr><td>Đại biểu quốc tế</td><td align="right">120 USD</td></tr></table><p style="margin:14px 0 8px;color:#555">Thanh toán trực tuyến, thu phí tự động</p><span class="pp">PayPal</span></div></div></div>`,'Đăng ký hội thảo'),
+init(){},actions:[]});
+/* ======== CẢNH 7 ======== */
+S.push({id:'npm',cs:'Cảnh 7 · Phòng IT 01h00',shot:'Shot 1',who:'Máy Tâm',title:'Terminal npm install + cảnh báo Skip & Install',
+html:`<div class="tm"><div class="ti">Terminal — giao-trinh-module</div><pre id="tx"></pre><div class="pop" id="wp" style="display:none"><div class="wr"><h2>SECURITY WARNING</h2><p>[SECURITY WARNING: Unverified Open-Source Library. High vulnerability risk. Scan now?]</p><div class="bt"><button id="sc">Scan Vulnerabilities</button><button class="p" id="sk">Skip &amp; Install</button></div></div></div></div>`,
+init(r,h){const tx=$('#tx',r),cmd='npm install unverified-pdf-parser';let base='<span class="g">tam@giaotrinh-pc</span>:<span class="b">~/giao-trinh-module</span>$ ';const run=()=>{tx.innerHTML=base+'<span id="cm"></span><span class="cur"></span>';h.type($('#cm',r),cmd,70,()=>{h.t(()=>{tx.innerHTML=base+cmd+'\n<span class="y">npm WARN</span> package unverified-pdf-parser has no verified publisher\n';$('#wp',r).style.display='flex'},400)},true)};run();
+$('#sk',r).onclick=()=>{$('#wp',r).style.display='none';const L=['<span class="y">npm WARN</span> skipping vulnerability scan','added 214 packages in 6s','','<span class="rd">3 high severity vulnerabilities</span>','','<span class="g">tam@giaotrinh-pc</span>:<span class="b">~/giao-trinh-module</span>$ <span class="cur"></span>'];L.forEach((x,i)=>h.t(()=>tx.innerHTML=tx.innerHTML.replace(/<span class="cur"><\/span>$/,'')+x+'\n',300*(i+1)))};$('#sc',r).onclick=()=>{$('#wp',r).style.display='none';tx.innerHTML+='scanning… 3 high, 1 critical (đây là nhánh “làm đúng”)\n'}},
+actions:[{l:'Bấm Skip & Install',f:r=>$('#sk',r).click()}]});
+S.push({id:'env',cs:'Cảnh 7 · Phòng IT 01h00',shot:'Shot 2',who:'Máy Sơn',title:'File .env chứa PAYPAL_SECRET_KEY (editor)',
+html:`<div class="tm" style="font-size:17px"><div class="ti">.env — hoithao-payment — Code Editor</div><pre><span style="color:#6a9955"># Cấu hình cổng thanh toán hội thảo (DEMO, khóa giả)</span>
+<span class="b">APP_ENV</span>=production
+<span class="b">PAYPAL_MODE</span>=live
+<span class="b">PAYPAL_CLIENT_ID</span>=live_cid_demo_00000000
+<span class="b" id="hk" style="background:#5a0f18;padding:0 6px;outline:2px solid #ff4d5e">PAYPAL_SECRET_KEY</span><span style="background:#5a0f18;outline:2px solid #ff4d5e">=live_sk_99a8b77c_DEMO_ONLY</span>
+<span class="b">DB_HOST</span>=10.10.1.21
+<span class="b">MAIL_FROM</span>=hoithao@truong-demo.edu.vn</pre></div>`,init(){},actions:[]});
+/* ======== CẢNH 8 ======== */
+const CT='<h2>HỢP ĐỒNG DỊCH VỤ LƯU TRỮ ĐÁM MÂY</h2><div style="text-align:center">Số: 0826/HĐ-CLOUD/2026</div><h4>Điều 1. Phạm vi dịch vụ</h4><p>Bên B cung cấp dịch vụ lưu trữ video tình huống giảng dạy và phân tích khoa học cho Bên A.</p><h4>Điều 2. Dung lượng và thời hạn</h4><p>Dung lượng 20 TB, thời hạn 36 tháng kể từ ngày ký.</p><h4>Điều 3. Giá dịch vụ</h4><p>Đơn giá bằng 50% mặt bằng thị trường, thanh toán theo quý.</p><h4>Điều 4. Quyền và nghĩa vụ của Bên A</h4><p>Cung cấp dữ liệu hợp lệ, thanh toán đúng hạn, bảo quản thông tin đăng nhập.</p><h4>Điều 5. Quyền và nghĩa vụ của Bên B</h4><p>Bảo đảm dịch vụ hoạt động tối thiểu 99% thời gian trong tháng.</p><h4>Điều 6. Sao lưu</h4><p>Bên B thực hiện sao lưu theo chính sách chung của nhà cung cấp.</p><h4>Điều 7. Bảo mật thông tin</h4><p>Hai bên cam kết không tiết lộ thông tin của nhau cho bên thứ ba khi chưa có sự đồng ý.</p><h4 id="d82">Điều 8. Trách nhiệm pháp lý</h4><p>8.1. Mỗi bên chịu trách nhiệm về hành vi của mình theo quy định pháp luật.</p><p class="k" id="k82">8.2. Nhà cung cấp dịch vụ Cloud sẽ không chịu bất kỳ trách nhiệm pháp lý hoặc bồi thường tài chính nào trong trường hợp dữ liệu lưu trữ bị rò rỉ, mất mát hoặc bị bên thứ ba đánh cắp.</p><h4>Điều 9. Điều khoản chung</h4><p>Hợp đồng có hiệu lực từ ngày ký. Mọi tranh chấp ưu tiên thương lượng.</p><p style="margin-top:50px;display:flex;justify-content:space-between"><b>ĐẠI DIỆN BÊN A</b><b>ĐẠI DIỆN BÊN B</b></p><div style="height:300px"></div>';
+S.push({id:'contract',cs:'Cảnh 8 · Phòng IT 01h30',shot:'Shot 2',who:'Máy Tâm',title:'Hợp đồng điện tử, Điều 8.2, nút ký duyệt',
+html:`<div class="scr ct"><div class="vw" id="vw"><div class="pg" id="pg">${CT}</div></div><div class="sd"><b>hop-dong-cloud-0826.pdf</b><span style="font-size:13px;opacity:.75">Trang 1 / 3 · Chờ ký số</span><button id="sg">[KÝ DUYỆT ĐIỆN TỬ &amp; PHÊ DUYỆT HỢP ĐỒNG]</button><div id="sp"></div></div></div>`,
+init(r,h){$('#sg',r).onclick=()=>{$('#sp',r).innerHTML='<div class="stp">ĐÃ KÝ SỐ<br><small>09/10/2026 · 01:41</small></div>'}},
+actions:[{l:'Cuộn nhanh qua Điều 8.2',f:(r,h)=>{const v=$('#vw',r);v.scrollTop=0;const t=$('#d82',r).offsetTop-120;let p=0;h.iv(()=>{p+=70;v.scrollTop=Math.min(p,t+380)},16)}},{l:'Zoom Điều 8.2',f:(r)=>{const pg=$('#pg',r);pg.style.transform=pg.style.transform?'':'scale(1.5)';$('#vw',r).scrollTop=$('#d82',r).offsetTop*(pg.style.transform?1.5:1)-120}},{l:'Bấm KÝ DUYỆT',f:r=>$('#sg',r).click()}]});
+/* ======== CẢNH 9 ======== */
+const sheet=Array.from({length:14},(_,i)=>`<tr><td>${i+1}</td><td>${['Mean','Median','Std.Dev','Min','Max','N','Var','Skew','Kurt','Chi-sq','t-test','F-ratio','p-value','R²'][i]}</td><td>${(Math.sin(i+1)*50+60).toFixed(3)}</td><td>${(Math.cos(i+2)*30+40).toFixed(3)}</td><td>${(i*1.7+3).toFixed(3)}</td></tr>`).join('');
+S.push({id:'xp',cs:'Cảnh 9 · Phòng IT 02h00',shot:'Shot 2',who:'Máy Thanh Thảo',title:'Phần mềm thống kê cũ + popup End of Life',
+html:`<div class="xp"><div class="ti">ThongKe Plus 2008 — [De_tai_NCKH_2026.dat]</div><div class="mn"><span>Tệp</span><span>Chỉnh sửa</span><span>Phân tích</span><span>Biểu đồ</span><span>Trợ giúp</span></div><div class="tl"><i></i><i></i><i></i><i></i><i></i></div><div class="gd"><table><tr><th>#</th><th>Chỉ số</th><th>Nhóm A</th><th>Nhóm B</th><th>Khác biệt</th></tr>${sheet}</table></div><div class="sb">Sẵn sàng · v7.2.1 (2008)</div><div class="ov" id="ov" style="display:none"><div class="xp al" style="position:static;inset:auto;display:block;height:auto"><div class="ti">CRITICAL ALERT</div><div class="tx"><b>CRITICAL ALERT:</b> This statistical software has reached End of Life (EOL) since 2018. Security patches and developer updates have been permanently terminated.<br><br>Nguy cơ bị tấn công mạng: phần mềm không còn nhận bản vá bảo mật.</div><div class="bt"><button id="by">Bỏ qua cảnh báo</button><button>Tìm hiểu thêm</button></div></div></div></div>`,
+init(r,h){h.t(()=>$('#ov',r).style.display='flex',1100);$('#by',r).onclick=()=>$('#ov',r).style.display='none'},actions:[{l:'Hiện popup EOL lại',f:r=>$('#ov',r).style.display='flex'},{l:'Bấm Bỏ qua cảnh báo',f:r=>$('#by',r).click()}]});
+
+/* ======== CẢNH 10 ======== */
+S.push({id:'shutdown',cs:'Cảnh 10 · Phòng IT 02h20',shot:'Shot 1',who:'Máy Tài',title:'Terminal sudo shutdown -r now (giả)',
+html:`<div class="tm"><div class="ti">ssh tai@db-giangday-01</div><pre id="tx"></pre></div>`,
+init(r,h){const tx=$('#tx',r);tx.innerHTML='<span class="y">top - 02:19:44 up 41 days</span>  load average: 6.12, 5.87, 5.40\n%Cpu(s): 88.1 us   <span class="rd">MiB Mem: 90.4% used</span>\n\n<span class="g">tai@db-giangday-01</span>:<span class="b">~</span>$ <span id="cm"></span><span class="cur"></span>'},
+actions:[{l:'Gõ lệnh shutdown',f:(r,h)=>{h.type($('#cm',r),'sudo shutdown -r now',80,()=>h.t(()=>{$('#tx',r).innerHTML+='\n\nBroadcast message from root@db-giangday-01:\n<span class="rd">The system is going down for reboot NOW!</span>\n'},350),true)}}]});
+S.push({id:'dbloss',cs:'Cảnh 10 · Phòng IT 02h20',shot:'Shot 1',who:'Máy Thanh Thảo',title:'Hệ thống giờ giảng: DATABASE CONNECTION LOST',
+html:`<div class="db"><div class="h">Quản lý giờ giảng · Chốt số liệu học kỳ</div><div class="bd"><b>Chốt số liệu giờ giảng toàn thể giảng viên (duyệt chi trả thù lao)</b><div class="pbar pb"><div id="pb" style="width:78%"></div></div><div id="pt">Đã xử lý 2.340 / 3.000 giờ giảng</div><br><table><tr><th>Giảng viên</th><th>Khoa</th><th>Giờ chuẩn</th><th>Giờ vượt</th><th>Trạng thái</th></tr>${[['Nguyễn Văn A','CNTT',280,42],['Trần Thị B','Kinh tế',264,18],['Lê Văn C','Ngoại ngữ',300,60],['Phạm Thị D','Luật',250,12],['Hoàng Văn E','Cơ khí',310,35],['Đỗ Thị F','Sư phạm',275,28]].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td>${x[3]}</td><td>Chưa lưu</td></tr>`).join('')}</table></div><div class="lost" id="ls" style="display:none"><h1>DATABASE CONNECTION LOST</h1><p>Phiên làm việc đã bị ngắt đột ngột.</p><p>Dữ liệu chưa lưu có thể bị mất.</p></div></div>`,
+init(r,h){let n=2340;h.iv(()=>{if($('#ls',r).style.display!=='none'||n>=2990)return;n+=9;$('#pb',r).style.width=(n/30)+'%';$('#pt',r).textContent=`Đã xử lý ${n.toLocaleString('vi')} / 3.000 giờ giảng`},300)},
+actions:[{l:'Mất kết nối (khi Tài bấm Enter)',f:(r,h)=>{$('#ls',r).style.display='flex';h.snd.beep(220,.5)}}]});
+S.push({id:'firewall',cs:'Cảnh 10 · Phòng IT 02h20',shot:'Shot 2',who:'Máy Tài',title:'Firewall: mở Port 8080/22 ra 0.0.0.0/0',
+html:`<div class="fw"><div class="h"><span>FW-Admin · Tường lửa biên</span><span>fw-edge-01</span></div><div class="gd"><div class="bx"><b>Firewall Rules · WAN → LAN</b><table><tr><th>Rule</th><th>Port</th><th>Source</th><th>Action</th><th>STATUS</th><th></th></tr><tr><td>R-10</td><td>443</td><td>ANY</td><td>ALLOW</td><td>OPEN</td><td></td></tr><tr class="hot" id="hr"><td>R-14</td><td>8080 / 22</td><td id="sr">10.10.0.0/16</td><td id="ac">ALLOW (nội bộ)</td><td id="stt">RESTRICTED</td><td><button id="ed">Edit</button></td></tr><tr><td>R-20</td><td>3389</td><td>10.10.5.0/24</td><td>ALLOW</td><td>RESTRICTED</td><td></td></tr><tr><td>R-99</td><td>ANY</td><td>ANY</td><td>DENY</td><td>ACTIVE</td><td></td></tr></table><div id="wn"></div></div><div class="bx"><b>Tải gói vá hệ thống · 8 GB</b><div class="sp" id="spd">100 KB/s</div><div class="pbar" style="margin:6px 0"><div id="pb" style="width:2%"></div></div><small id="pc">Deep packet inspection đang quét gói tin…</small></div></div></div>`,
+init(r,h){$('#ed',r).onclick=()=>{$('#sr',r).innerHTML='<input id="in" value="10.10.0.0/16">';const i=$('#in',r);i.focus();h.t(()=>{h.type(i,'0.0.0.0/0',90,()=>apply(),true)},300)};
+function apply(){$('#sr',r).textContent='0.0.0.0/0';$('#ac',r).textContent='ALLOW ALL ANYWHERE';$('#stt',r).innerHTML='<span class="o">OPEN</span>';$('#spd',r).textContent='50 MB/s';$('#pb',r).style.width='100%';$('#pb',r).style.transition='width 3s';$('#pc',r).textContent='Hoàn tất 8 GB';$('#wn',r).innerHTML='<div class="wn">CẢNH BÁO: Port 8080/22 đang mở cho toàn bộ Internet (0.0.0.0/0) — nguy cơ xâm nhập từ bên ngoài</div>'}
+h.on(()=>{})},
+actions:[{l:'Edit rule → 0.0.0.0/0',f:r=>$('#ed',r).click()}]});
+/* ======== CẢNH 11 ======== */
+S.push({id:'testrun',cs:'Cảnh 11 · Phòng IT 02h40',shot:'Shot 1–2',who:'Máy Sơn',title:'Kịch bản test: Permission Denied → Testing Passed 100%',
+html:`<div class="tr"><h2>auto-test · hệ thống thanh toán hội thảo</h2><div id="ls">✔ login_flow<br>✔ registration_form<br>✔ paypal_checkout_sandbox<br><span class="rd">✘ write_financial_record</span></div><div class="big f" id="bg">Permission Denied: Service_Account_Test does not have write access to Financial tables.</div></div>`,
+init(){},actions:[{l:'Chạy lại → Testing Passed 100%',f:(r,h)=>{$('#ls',r).innerHTML='✔ login_flow<br>✔ registration_form<br>✔ paypal_checkout_sandbox<br>✔ write_financial_record';const b=$('#bg',r);b.className='big p';b.textContent='Testing Passed: 100%';h.snd.beep(1200,.25)}}]});
+S.push({id:'ssms',cs:'Cảnh 11 · Phòng IT 02h40',shot:'Shot 1',who:'Máy Sơn',title:'SSMS: tick INSERT / UPDATE / DELETE',
+html:`<div class="ss"><div class="tb"><b>Login Properties — Service_Account_Test</b><button id="ex">▶ Execute</button></div><div class="mn"><div class="pl"><div>General</div><div>Server Roles</div><div>User Mapping</div><div class="a">Securables</div><div>Status</div></div><div class="rt"><b>Securables (database FinanceDB)</b><table><tr><th>Object</th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr><tr><td>dbo.tbl_Courses</td><td><input type="checkbox" checked disabled></td><td><input type="checkbox" disabled></td><td><input type="checkbox" disabled></td><td><input type="checkbox" disabled></td></tr><tr><td><b>dbo.tbl_Financial_Transactions</b></td><td><input type="checkbox" checked disabled></td><td><input type="checkbox" class="pm" data-p="INSERT"></td><td><input type="checkbox" class="pm" data-p="UPDATE"></td><td><input type="checkbox" class="pm" data-p="DELETE"></td></tr></table><div class="sq" id="sq">-- chưa có thay đổi</div><div class="ok" id="ok"></div></div></div></div>`,
+init(r,h){const up=()=>{const p=$$('.pm',r).filter(c=>c.checked).map(c=>c.dataset.p);$('#sq',r).textContent=p.length?`GRANT ${p.join(', ')}\nON dbo.tbl_Financial_Transactions\nTO Service_Account_Test;`:'-- chưa có thay đổi';$('#ok',r).textContent=''};$$('.pm',r).forEach(c=>c.onchange=up);$('#ex',r).onclick=()=>{$('#ok',r).textContent='Commands completed successfully.'}},
+actions:[{l:'Tick 3 quyền (lần lượt)',f:(r,h)=>$$('.pm',r).forEach((c,i)=>h.t(()=>{c.checked=true;c.onchange();h.snd.beep(700,.05)},i*500))},{l:'Bấm Execute',f:r=>$('#ex',r).click()}]});
+S.push({id:'desk',cs:'Cảnh 11 · Phòng IT 02h40',shot:'Shot 2',who:'Máy Sơn',title:'IT Service Desk: nút CLOSE TICKET',
+html:chrome('servicedesk.truong-demo.edu.vn/tickets/SD-4417',`<div class="dsk"><div class="h">IT Service Desk · SD-4417</div><div class="bd"><div class="bx"><h2 style="margin-top:0">Bảo trì hệ thống NCKH và cổng thanh toán hội thảo</h2><span class="pill" id="pl">In progress</span><p>Người phụ trách: Trường Sơn · Mức ưu tiên: Cao</p><p>Biên bản nghiệm thu (Sign-off): <b class="red">chưa có</b></p></div><div class="bx"><b>Hành động</b><button class="cl" id="cl">CLOSE TICKET - MAINTENANCE COMPLETED</button><p id="cm" style="font-weight:600"></p></div></div></div>`,'Service Desk'),
+init(r){$('#cl',r).onclick=()=>{$('#pl',r).textContent='Closed';$('#pl',r).className='pill c';$('#cm',r).textContent='Ticket đã đóng.';$('#cl',r).disabled=true}},actions:[{l:'Bấm CLOSE TICKET',f:r=>$('#cl',r).click()}]});
+/* ======== CẢNH 12 ======== */
+S.push({id:'beacon',cs:'Cảnh 12 · Phòng IT 02h50',shot:'Shot 1',who:'Đèn sự cố / màn hình đỏ',title:'Đèn khẩn cấp đỏ xoay + còi hú',
+html:`<div class="bc"><div class="sp"></div><div class="gl"></div></div>`,init(r,h){h.snd.siren(false)},
+actions:[{l:'Bật còi hú',f:(r,h)=>{h.snd.siren(true);h.on(()=>h.snd.siren(false))}},{l:'Tắt còi',f:(r,h)=>h.snd.siren(false)}]});
+const AL=[['Máy Tài','CRITICAL INTRUSION: Malicious bot scanned Port 8080 via open firewall rule (0.0.0.0/0).'],['Máy Phương Thảo','SECURITY ALERT: Unauthorized data dump from Testing Database (Lecturers National ID leaked)!'],['Máy Sơn','DATABASE INTEGRITY VIOLATION: Service_Account_Test overwrote tbl_Financial_Transactions!'],['Máy Tâm','PAYMENT GATEWAY COMPROMISED: Old API Key abused by external IP!'],['Máy Thanh Thảo','ALL DEMO SERVICES OFFLINE - SYSTEM FROZEN!']];
+AL.forEach((a,i)=>S.push({id:'alert'+(i+1),cs:'Cảnh 12 · Phòng IT 02h50',shot:'Shot 2',who:a[0],title:'Cảnh báo đỏ '+(i+1)+'/5',
+html:`<div class="al5"><div class="lg" id="lg"></div><div class="ms"><small>SECURITY CONSOLE · ${a[0].toUpperCase()}</small><h1>${a[1]}</h1></div></div>`,
+init(r,h){const lg=$('#lg',r);const g=()=>`${new Date(Date.now()).toTimeString().slice(0,8)}  ${['DENY','ALERT','WARN','BLOCK','ALLOW'][Math.random()*5|0]}  ${(Math.random()*223+1|0)}.${Math.random()*255|0}.${Math.random()*255|0}.${Math.random()*255|0}:${[22,8080,443,3389,1433][Math.random()*5|0]} -> 10.10.1.${Math.random()*40|0}  len=${Math.random()*1400|0}`;lg.textContent=Array.from({length:30},g).join('\n');h.iv(()=>{lg.textContent=lg.textContent.split('\n').slice(1).concat(g()).join('\n')},90)},
+actions:[{l:'Bật còi hú',f:(r,h)=>{h.snd.siren(true);h.on(()=>h.snd.siren(false))}},{l:'Tắt còi',f:(r,h)=>h.snd.siren(false)}]}));
+S.push({id:'ending',cs:'Cảnh 12 · Phòng IT 02h50',shot:'Shot 3',who:'Màn hình đen kết phim',title:'Dòng chữ kết phim (gõ phím)',
+html:`<div class="en"><h1 id="tx"></h1></div>`,init(){},
+actions:[{l:'Gõ chữ kết phim (có tiếng phím)',f:(r,h)=>{h.type($('#tx',r),'MỘT ĐÊM TRỰC CHẠY DEADLINE – BẠN CÓ ĐỦ TỈNH TÁO ĐỂ NHẬN DIỆN HẾT 20 LỖI AN TOÀN THÔNG TIN ĐÃ XẢY RA?',70,null,true)}}]});
+/* ---------- tab Tự làm ---------- */
+const ENV='# Cấu hình cổng thanh toán hội thảo (DEMO, khóa giả)\nAPP_ENV=production\nPAYPAL_MODE=live\nPAYPAL_CLIENT_ID=live_cid_demo_00000000\nPAYPAL_SECRET_KEY=live_sk_99a8b77c_DEMO_ONLY\nDB_HOST=10.10.1.21';
+const DIY=[
+{t:'Thư mục backup rỗng',ref:'Cảnh 2 · Shot 2 · máy Sơn',s:['Trên ổ D tạo thư mục System_Backup, bên trong tạo thư mục NCKH và để trống.','Mở File Explorer tới D:\\System_Backup\\NCKH. Windows tự hiện “This folder is empty.”','Gõ bất kỳ chữ vào ô tìm kiếm để thanh trạng thái hiện “0 items found”.'],n:'Bản code cùng nội dung có trong danh sách bên trái, dùng khi quay trên máy không phải Windows.'},
+{t:'Hai máy Win10 và Win11, popup ở máy số 3',ref:'Cảnh 4 · Shot 1',s:['Máy 1 và máy 2: bật đúng hệ điều hành Win10 / Win11 thật, không cần cài gì.','Máy 3: mở màn hình “Popup Configuration Drift” rồi bật chế độ quay (H).','Nếu thiếu máy, dùng nút “Đổi kiểu desktop Win10 ⇄ Win11” cho cùng một màn hình.']},
+{t:'Tin nhắn Telegram trên điện thoại bàn',ref:'Cảnh 6 · Shot 1',s:['Dùng một điện thoại khác (hoặc máy tính) nhắn vào Telegram của máy Tâm đúng lúc đạo diễn hô.','Bật hiện nội dung thông báo, để thông báo nổi lên màn hình.','Điện thoại bàn: nhờ một người gọi vào số để đổ chuông thật.']},
+{t:'File .env trong trình soạn code',ref:'Cảnh 7 · Shot 2 · máy Sơn',s:['Mở VS Code (hoặc Notepad++), tạo file tên .env.','Dán nội dung bên dưới. Toàn bộ là khóa giả, không phải khóa thật.','Phóng to cỡ chữ 18–20 để quay rõ dòng PAYPAL_SECRET_KEY.'],code:ENV},
+{t:'Gmail cá nhân, đính kèm sơ đồ mạng, nút Send',ref:'Cảnh 9 · Shot 1 · máy Tài',s:['Dùng một Gmail phụ của nhóm, đổi tên hiển thị thành “Tài”. Không dùng Gmail thật của ai.','Tạo file tên So_Do_Cau_Hinh_Mang_Cum_AI_Chi_Tiet.vsdx (đổi đuôi một file rỗng, hoặc xuất sơ đồ từ draw.io).','Soạn thư gửi một địa chỉ phụ do nhóm tự lập, đính kèm file, chỉ cận cảnh ngón tay bấm Send.','Muốn an toàn tuyệt đối: dừng ở soạn thư, không gửi thật.']},
+{t:'Zalo nhắn vào group chung',ref:'Cảnh 11 · Shot 2 · điện thoại Sơn',s:['Lập group Zalo thử gồm vài thành viên trong nhóm.','Sơn gõ: “Xong rồi nha chị Thảo, hệ thống chạy mượt”.','Quay cận điện thoại, bấm gửi đúng lúc nhân vật bấm.']},
+{t:'File Excel danh sách giảng viên',ref:'Cảnh 3 · Shot 2 · máy Tài',s:['Dùng file PROD_NCKH_GIANGVIEN_CHINHTHUC_2026.xlsx đi kèm (toàn dữ liệu bịa).','Mở file, hiện đủ 4 cột: Họ tên GV, Số CCCD/Định danh, Số tài khoản ngân hàng, Mã số thuế.','Quay Ctrl + A rồi Ctrl + C, sau đó dán vào màn hình “Môi trường Test”.']},
+{t:'Lệnh shutdown: đừng chạy thật',ref:'Cảnh 10 · Shot 1',s:['Dùng màn hình “Terminal sudo shutdown -r now (giả)”. Nó chỉ hiện chữ, không tắt máy.','Không gõ lệnh thật trên máy đang quay.']}
+];
+$('#diy').innerHTML=DIY.map(d=>`<div class="card"><h3>${d.t}</h3><div class="ref">${d.ref}</div><ol>${d.s.map(x=>`<li>${x}</li>`).join('')}</ol>${d.code?`<pre>${d.code}</pre><button class="btn cp" data-c="${encodeURIComponent(d.code)}">Sao chép nội dung</button>`:''}${d.n?`<div class="hint" style="margin-top:8px">${d.n}</div>`:''}</div>`).join('');
+$$('.cp').forEach(b=>b.onclick=()=>{const t=decodeURIComponent(b.dataset.c);const ok=()=>b.textContent='Đã sao chép';(navigator.clipboard?navigator.clipboard.writeText(t).then(ok,()=>{}):Promise.reject()).catch(()=>{})});
+/* ---------- điều khiển ---------- */
+const nav=$('#nav');let lastCs='';
+S.forEach((s,i)=>{if(s.cs!==lastCs){const g=document.createElement('div');g.className='grp';g.textContent=s.cs;nav.appendChild(g);lastCs=s.cs}const b=document.createElement('button');b.className='it';b.dataset.i=i;b.innerHTML=`<span class="sh">${s.shot}</span><span class="tt">${s.title}<small>${s.who}</small></span>`;b.onclick=()=>show(i);nav.appendChild(b)});
+function show(i){cleanups.forEach(f=>{try{f()}catch(e){}});cleanups=[];H.snd.siren(false);i=(i+S.length)%S.length;cur=i;const s=S[i],root=$('#cv');root.innerHTML=s.html;$$('.it').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+ const bar=$('#bar');bar.innerHTML=`<div class="who"><b>${s.title}</b><span>${s.cs} · ${s.shot} · ${s.who}</span></div>`;
+ (s.actions||[]).forEach((a,k)=>{const b=document.createElement('button');b.className='act';b.innerHTML=`<i>${k+1}</i>${a.l}`;b.onclick=()=>run(k);bar.appendChild(b)});
+ const rs=document.createElement('button');rs.className='btn';rs.textContent='Đặt lại (R)';rs.onclick=()=>show(cur);bar.appendChild(rs);
+ try{s.init&&s.init(root,H)}catch(e){console.error(e)}
+ try{history.replaceState(null,'','#'+s.id)}catch(e){}
+ const it=$('.it.on');it&&it.scrollIntoView({block:'nearest'})}
+function run(k){const a=S[cur].actions&&S[cur].actions[k];if(a){A();try{a.f($('#cv'),H)}catch(e){console.error(e)}}}
+function fit(){const st=$('#stage'),w=st.clientWidth,h=st.clientHeight,s=Math.min(w/1280,h/720);$('#fit').style.transform=`translate(${(w-1280*s)/2}px,${(h-720*s)/2}px) scale(${s})`}
+new ResizeObserver(fit).observe($('#stage'));window.addEventListener('resize',fit);
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.style.opacity=0,2400);setTimeout(()=>d.remove(),3000)}
+function shoot(on){document.documentElement.classList.toggle('shoot',on===undefined?!document.documentElement.classList.contains('shoot'):on);if(document.documentElement.classList.contains('shoot'))toast('Chế độ quay: H hoặc Esc để thoát · 1–9 kích hoạt hành động');requestAnimationFrame(fit);setTimeout(fit,60)}
+function full(){try{const el=document.documentElement;document.fullscreenElement?document.exitFullscreen():el.requestFullscreen().catch(()=>toast('Trình duyệt chặn toàn màn hình, hãy bấm F11'))}catch(e){toast('Hãy bấm F11 để toàn màn hình')}}
+$('#bShoot').onclick=()=>{A();shoot()};$('#bFull').onclick=full;
+$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));const d=b.dataset.tab==='diy';$('#diy').hidden=!d;$('#main').hidden=d;$('#nav').hidden=d});
+document.addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
+ if(k==='ArrowRight')show(cur+1);else if(k==='ArrowLeft')show(cur-1);else if(k==='h'||k==='H')shoot();else if(k==='Escape')shoot(false);else if(k==='f'||k==='F')full();else if(k==='r'||k==='R')show(cur);else if(/^[1-9]$/.test(k))run(+k-1)});
+const start=Math.max(0,S.findIndex(s=>'#'+s.id===location.hash));show(start);fit();
+})();
+</script>
+
+</body></html>
